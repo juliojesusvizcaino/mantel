@@ -10,48 +10,21 @@
 	}
 </script>
 
-<div class="parent">
-	<h1 class="title">Who's this?</h1>
-	<img src="black-cat-looking-up-at-owner.jpg" alt="A cat" />
-	<div class="options-wrapper">
+<div class="grid content-center h-screen gap-4">
+	<h1 class="text-3xl mx-auto">Who's this?</h1>
+	<img
+		src="black-cat-looking-up-at-owner.jpg"
+		alt="A cat"
+		class="w-64 h-64 rounded-full object-cover mx-auto"
+	/>
+	<div class="flex justify-between gap-2 w-fit mx-auto">
 		{#each names as name (name.id)}
-			<button on:click={() => select(name)}>
+			<button
+				class="bg-gradient-to-br from-violet-500 to-fuchsia-500 p-4 rounded-xl text-white"
+				on:click={() => select(name)}
+			>
 				{name.value}
 			</button>
 		{/each}
 	</div>
 </div>
-
-<style>
-	.parent {
-		width: 100%;
-		height: 100vh;
-		display: grid;
-		place-content: center;
-        gap: 1em;
-	}
-	.title {
-		margin-left: auto;
-		margin-right: auto;
-        margin-top: 0;
-        margin-bottom: 0;
-	}
-	img {
-		/* width: 20em; */
-		/* height: 20em; */
-		/* aspect-ratio: initial; */
-		display: block;
-		width: 20em;
-		height: 20em;
-		object-fit: cover;
-	}
-
-	.options-wrapper {
-		display: flex;
-		justify-content: space-between;
-	}
-
-	button {
-		display: inline-block;
-	}
-</style>
