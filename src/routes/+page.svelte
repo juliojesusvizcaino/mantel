@@ -8,13 +8,13 @@
 	export let data: PageData;
 	export let form: ActionData;
 
-	$: question = form ? form.next : data.question;
+	$: question = data.question;
 </script>
 
 <div class="grid content-center min-h-screen gap-4">
 	loading: {loading}
 	<h1 class="text-3xl mx-auto">Who's this?</h1>
-	<img alt="Who's this?" src={question?.img} class="w-64 h-64 rounded-full object-cover mx-auto" />
+	<img alt="Who's this?" src={question.img} class="w-64 h-64 rounded-full object-cover mx-auto" />
 	<form
 		method="POST"
 		use:enhance={({ form, data, action, cancel }) => {
@@ -25,15 +25,16 @@
 			};
 		}}
 	>
+		<input type="hidden" name="questionId" value={question.id} />
 		<div class="flex justify-between gap-2 w-fit mx-auto">
 			{#if form}
-				{#if form.success}
+				{#if form.result === 'success'}
 					yesss
-				{:else}
-					noooo
+				{:else if form.result === 'failure'}
+					noooo, el bueno era {form.answer.name}
 				{/if}
 			{:else}{/if}
-			{#each question?.options ?? [] as option (option.id)}
+			{#each question.options ?? [] as option (option.id)}
 				<button
 					class="bg-gradient-to-br from-violet-500 to-fuchsia-500 p-4 rounded-xl text-white hover:drop-shadow-lg disabled:opacity-75"
 					name="chosen"

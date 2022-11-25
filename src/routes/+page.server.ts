@@ -1,4 +1,4 @@
-import { PrismaClient } from "@prisma/client";
+import { PrismaClient, } from "@prisma/client";
 import { invalid } from "@sveltejs/kit";
 import type { Actions, PageServerLoad } from "./$types";
 
@@ -26,36 +26,46 @@ function pick<T>(array: T[]): T {
     return array[Math.floor(Math.random() * array.length)];
 }
 
-export const load: PageServerLoad = async () => {
-    try {
-        const user = await prisma.user.findFirstOrThrow();
-        const userNames = await prisma.user.findMany({ select: { id: true, name: true } })
-        const question = await prisma.question.create({
-            data: {
-                answer: { connect: { id: user.id } },
-                options: {
-                    createMany: {
-                        data: userNames
-                            .filter(({ id }) => id !== user.id)
-                            .slice(0, 3)
-                            .map(({ id }) => ({ userId: id }))
-                    }
-                }
-            },
-            include: {
-                answer: true,
-                options: {
-                    include: {
-                        user: true
-                    }
+async function createQuestion(client: PrismaClient) {
+    const allUsers = await client.user.findMany();
+    const someUsers = shuffle(allUsers).slice(0, 4);
+
+    const user = pick(someUsers);
+
+    const question = await client.question.create({
+        data: {
+            correctOption: { connect: { id: user.id } },
+            options: {
+                createMany: {
+                    data: someUsers
+                        .filter(({ id }) => id !== user.id)
+                        .slice(0, 3)
+                        .map(({ id }) => ({ userId: id }))
                 }
             }
-        })
+        },
+        include: {
+            correctOption: true,
+            options: {
+                include: {
+                    user: true
+                }
+            }
+        }
+    })
+
+    return { question, options: someUsers };
+}
+
+export const load: PageServerLoad = async () => {
+    try {
+        const { question, options } = await createQuestion(prisma);
+        console.log('load')
         return {
             question: {
                 id: question.id,
-                img: question.answer.img,
-                options: shuffle([question.answer, ...question.options.map(({ user }) => (user))]),
+                img: question.correctOption.img,
+                options
             }
         };
     } finally {
@@ -66,23 +76,38 @@ export const load: PageServerLoad = async () => {
 export const actions: Actions = {
     default: async (event) => {
         const data = await event.request.formData();
-        const chosen = data.get("chosen")
-        if (!chosen) {
+        const chosen = data.get("chosen")?.valueOf();
+        const questionId = data.get("questionId")?.valueOf();
+        if (!chosen || !questionId) {
             return invalid(400, { chosen, missing: true });
         }
         // await new Promise(r => setTimeout(r, 1000));
+        try {
+            const question = await prisma.question.findUniqueOrThrow({
+                where: { id: +questionId },
+                include: { correctOption: true }
+            });
 
-        const allUsers = await prisma.user.findMany();
-        const someUsers = shuffle(allUsers).slice(0, 4);
+            if (question.answerId) {
+                return invalid(400, { result: 'already-answered' } as const);
+            }
 
-        const next = pick(someUsers);
+            await prisma.question.update({
+                where: { id: question.id },
+                data: {
+                    answerId: +chosen
+                },
+            });
 
-        return {
-            success: chosen && +chosen.valueOf() === 1, next: {
-                id: next.id,
-                img: next.img,
-                options: someUsers
-            },
-        };
+            console.log('action')
+
+            if (question.correctOptionId === +chosen) {
+                return { result: 'success' } as const;
+            } else {
+                return { result: 'failure', answer: question.correctOption } as const;
+            }
+        } finally {
+            await prisma.$disconnect()
+        }
     }
 }

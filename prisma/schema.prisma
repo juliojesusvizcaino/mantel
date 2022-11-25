@@ -15,17 +15,20 @@ model User {
     img  String
     name String
 
-    questions Question[]
-    options   QuestionOption[]
+    correctQuestions Question[]       @relation("CorrectQuestions")
+    answers          Question[]       @relation("Answers")
+    options          QuestionOption[]
 }
 
 model Question {
     id Int @id @default(autoincrement())
 
-    answer   User @relation(fields: [answerId], references: [id])
-    answerId Int
+    answer   User? @relation("Answers", fields: [answerId], references: [id])
+    answerId Int?
 
-    options QuestionOption[]
+    correctOption   User             @relation("CorrectQuestions", fields: [correctOptionId], references: [id])
+    correctOptionId Int
+    options         QuestionOption[]
 }
 
 model QuestionOption {
