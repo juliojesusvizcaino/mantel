@@ -30,11 +30,32 @@ export const load: PageServerLoad = async () => {
     try {
         const user = await prisma.user.findFirstOrThrow();
         const userNames = await prisma.user.findMany({ select: { id: true, name: true } })
+        const question = await prisma.question.create({
+            data: {
+                answer: { connect: { id: user.id } },
+                options: {
+                    createMany: {
+                        data: userNames
+                            .filter(({ id }) => id !== user.id)
+                            .slice(0, 3)
+                            .map(({ id }) => ({ userId: id }))
+                    }
+                }
+            },
+            include: {
+                answer: true,
+                options: {
+                    include: {
+                        user: true
+                    }
+                }
+            }
+        })
         return {
             question: {
-                id: 1,
-                img: user.img,
-                options: shuffle([user, ...userNames.filter(({ id }) => id !== user.id).slice(0, 3)]),
+                id: question.id,
+                img: question.answer.img,
+                options: shuffle([question.answer, ...question.options.map(({ user }) => (user))]),
             }
         };
     } finally {

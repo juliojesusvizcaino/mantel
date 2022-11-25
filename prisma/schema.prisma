@@ -14,4 +14,26 @@ model User {
     id   Int    @id @default(autoincrement())
     img  String
     name String
+
+    questions Question[]
+    options   QuestionOption[]
+}
+
+model Question {
+    id Int @id @default(autoincrement())
+
+    answer   User @relation(fields: [answerId], references: [id])
+    answerId Int
+
+    options QuestionOption[]
+}
+
+model QuestionOption {
+    question   Question @relation(fields: [questionId], references: [id])
+    questionId Int
+
+    user   User @relation(fields: [userId], references: [id])
+    userId Int
+
+    @@id([questionId, userId])
 }
