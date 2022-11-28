@@ -28,6 +28,7 @@
 			name="name"
 			bind:value={name}
 			class="block w-full rounded-md border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+            required
 		/>
 		<label for="image" class="block text-sm font-medium text-gray-700">Image</label>
         <input name="image" type="file" bind:value={files} accept="image/*" />
