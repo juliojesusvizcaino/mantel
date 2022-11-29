@@ -37,6 +37,7 @@
 	},
 	"type": "module",
 	"dependencies": {
-		"@prisma/client": "^4.6.1"
+		"@prisma/client": "^4.6.1",
+		"google-auth-library": "^8.7.0"
 	}
 }
